@@ -10,6 +10,8 @@ up:
 	@docker network inspect $(NETWORK_NAME) >/dev/null 2>&1 || docker network create $(NETWORK_NAME)
 	@echo ">>> Starting ETL stack..."
 	@docker-compose -f etl/docker-compose.yaml up -d
+	@echo ">>> Creating Airflow directories..."
+	@mkdir -p airflow/logs airflow/dags airflow/plugins airflow/config
 	@echo ">>> Starting Airflow stack..."
 	@docker-compose -f airflow/docker-compose.yaml up -d
 	@echo ">>> Waiting for Postgres to be ready..."
