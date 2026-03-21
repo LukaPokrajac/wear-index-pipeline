@@ -9,9 +9,9 @@ up:
 	@echo ">>> Creating shared Docker network (if not exists)..."
 	@docker network inspect $(NETWORK_NAME) >/dev/null 2>&1 || docker network create $(NETWORK_NAME)
 	@echo ">>> Starting ETL stack..."
-	@docker-compose -f etl/docker-compose.yml up -d
+	@docker-compose -f etl/docker-compose.yaml up -d
 	@echo ">>> Starting Airflow stack..."
-	@docker-compose -f airflow/docker-compose.yml up -d
+	@docker-compose -f airflow/docker-compose.yaml up -d
 	@echo ">>> Waiting for Postgres to be ready..."
 	@until docker exec $(PG_CONTAINER) pg_isready -U $(PG_USER) >/dev/null 2>&1; do sleep 1; done
 	@echo ">>> Creating tables..."
@@ -22,9 +22,9 @@ up:
 
 down:
 	@echo ">>> Stopping Airflow stack..."
-	@docker-compose -f airflow/docker-compose.yml down
+	@docker-compose -f airflow/docker-compose.yaml down
 	@echo ">>> Stopping ETL stack..."
-	@docker-compose -f etl/docker-compose.yml down
+	@docker-compose -f etl/docker-compose.yaml down
 	@echo ">>> All services stopped."
 
 query:
@@ -33,8 +33,8 @@ query:
 
 logs:
 	@echo ">>> ETL logs:"
-	@docker-compose -f etl/docker-compose.yml logs --tail=50
+	@docker-compose -f etl/docker-compose.yaml logs --tail=50
 	@echo ">>> Airflow logs:"
-	@docker-compose -f airflow/docker-compose.yml logs --tail=50
+	@docker-compose -f airflow/docker-compose.yaml logs --tail=50
 
 restart: down up
