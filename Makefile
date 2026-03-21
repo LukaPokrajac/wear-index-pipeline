@@ -11,7 +11,7 @@ up:
 	@echo ">>> Starting ETL stack..."
 	@docker-compose -f etl/docker-compose.yaml up -d
 	@echo ">>> Creating Airflow directories..."
-	@mkdir -p airflow/logs airflow/dags airflow/plugins airflow/config
+	@mkdir -p airflow/logs airflow/dags airflow/plugins airflow/config && sudo chown -R 50000:0 airflow/logs airflow/dags airflow/plugins airflow/config
 	@echo ">>> Starting Airflow stack..."
 	@docker-compose -f airflow/docker-compose.yaml up -d
 	@echo ">>> Waiting for Postgres to be ready..."
