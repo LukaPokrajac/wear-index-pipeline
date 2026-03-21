@@ -8,7 +8,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      -etl-db-volume:/var/lib/postgresql/data
+      - etl-db-volume:/var/lib/postgresql/data
     networks:
       - networkName
 
