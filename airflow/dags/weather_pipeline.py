@@ -15,12 +15,12 @@ with DAG(
     run_pipeline = BashOperator(
         task_id = 'run_weather_pipeline',
         bash_command="python /opt/etl/src/load_pipeline.py",
-        env={"DB_URL": "postgresql+psycopg2://etl:etl@etl_db_1:5432/weather"},
+        env={"DB_URL": "postgresql+psycopg2://etl:etl@etl-db-1:5432/weather"},
     )
 
     refresh_wear_now = BashOperator(
         task_id='refresh_wear_now',
-        bash_command='psql postgresql://etl:etl@etl_db_1:5432/weather -c "REFRESH MATERIALIZED VIEW wear_now;"',
+        bash_command='psql postgresql://etl:etl@etl-db-1:5432/weather -c "REFRESH MATERIALIZED VIEW wear_now;"',
     )
  
     run_pipeline >> refresh_wear_now
