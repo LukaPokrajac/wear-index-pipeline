@@ -9,21 +9,19 @@ Raw hourly temperature alone doesn't capture how cold it actually feels.
 This pipeline smooths temperature with window functions and combines it with wind speed to compute a feels-like index so you know what to wear.
 
 # Architecture
-
-Open-Meteo API
-Python ETL
-Staging table
-UPSERT into weather_hourly
-Materialized view wear_now
-Airflow DAG
+- Open-Meteo API
+- Python ETL
+- Staging table
+- UPSERT into weather_hourly
+- Materialized view wear_now
+- Airflow DAG
 
 # Tech Stack
-
-Python (requests, pandas, SQLAlchemy, logging)
-PostgreSQL 
-Apache Airflow (BashOperator, hourly schedule)
-Docker + DockerCompose
-Materialized Views + Window Functions
+- Python (requests, pandas, SQLAlchemy, logging)
+- PostgreSQL
+- Apache Airflow (BashOperator, hourly schedule)
+- Docker + Docker Compose
+- Materialized Views + Window Functions
 
 # Run Locally
 
