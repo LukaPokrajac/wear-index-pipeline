@@ -15,6 +15,7 @@ services:
 networks:
   networkName:
     name: networkName
+    external: true
 
 volumes:
   etl-db-volume:
