@@ -1,7 +1,7 @@
 # Wear index ETL pipeline
 
-Production style hourly pipeline that ingests weather data from Open-Meteo, transforms it in PostgreSQL, and serves a feels-like temperature index for Belgrade. 
-Fully orchestrated with Apache Airflow and containerized with Docker.
+Production style hourly ETL pipeline that ingests weather data from Open-Meteo, transforms it in PostgreSQL, and serves a feels-like temperature for Belgrade. 
+Designed with idempotent loads, incremental ingestion, orchestrated with Airflow and containerized with Docker.
 
 # Problem
 
@@ -25,28 +25,62 @@ Apache Airflow (BashOperator, hourly schedule)
 Docker + DockerCompose
 Materialized Views + Window Functions
 
-# Run locally
+# Run Locally
 
-Start both environments (shared Docker network required):
+## Prerequisites
+- Docker
+- Docker Compose
+- `make` (Linux/Mac built-in)
 
-docker-compose up -d  # ETL + Postgres
-docker-compose up -d  # Airflow
+> **Windows users:** use `./start.sh <command>` instead of `make <command>`.
 
-Trigger DAG manually or wait for hourly schedule in Airflow UI at localhost:8080
+## Setup
 
-Run wear_now.sql or wear_index.py
+Clone the repository:
+```bash
+git clone https://github.com/LukaPokrajac/wear-index-pipeline.git
+cd wear-index-pipeline
+```
 
-# Example output
+Start everything with a single command:
+```bash
+make up
+```
 
-select anchor_ts, feels_like_c, label
-from wear_now
-order by anchor_ts
-limit 1;
+This will:
+1. Create the shared Docker network if it doesn't exist
+2. Start the ETL stack (Python ETL + PostgreSQL)
+3. Start the Airflow stack
+4. Create the database tables
+5. Create the `wear_now` materialized view
 
+## Airflow UI
+
+Open [http://localhost:8080](http://localhost:8080) — trigger the DAG manually or wait for the hourly schedule.  
+Default credentials: `airflow / airflow`
+
+## Query the wear index
+
+Once the DAG has run at least once:
+```bash
+make query
+```
+
+Expected output:
+```
        anchor_ts        | feels_like_c | label
 ------------------------+--------------+-------
  2026-02-12 01:00:00+00 |          5.1 | Cold
 (1 row)
+```
+
+The view refreshes automatically after every DAG run.
+
+## Tear down
+
+```bash
+make down
+```
 
 # Design Decisions
 
