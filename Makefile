@@ -1,5 +1,5 @@
 NETWORK_NAME = networkName
-PG_CONTAINER = etl_db_1
+PG_CONTAINER = etl-db-1
 PG_USER      = etl
 PG_DB        = weather
 
