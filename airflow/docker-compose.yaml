@@ -53,7 +53,6 @@ x-airflow-common:
   # build: .
   #env_file:
   #  - ${ENV_FILE_PATH:-.env}
-  AIRFLOW_UID: ${AIRFLOW_UID:-50000}
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
