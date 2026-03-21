@@ -1,6 +1,6 @@
 # Wear index ETL pipeline
 
-Production style hourly ETL pipeline that ingests weather data from Open-Meteo, transforms it in PostgreSQL, and serves a feels-like temperature for Belgrade. 
+Production style hourly ETL pipeline that ingests weather data from Open-Meteo, transforms it in PostgreSQL, and serves a feels-like temperature for Belgrade.
 Designed with idempotent loads, incremental ingestion, orchestrated with Airflow and containerized with Docker.
 
 # Problem
