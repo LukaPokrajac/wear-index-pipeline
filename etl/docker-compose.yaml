@@ -11,7 +11,7 @@ services:
       - etl-db-volume:/var/lib/postgresql/data
     networks:
       - networkName
-
+    container_name: etl-db-1
 networks:
   networkName:
     name: networkName
