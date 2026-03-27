@@ -23,6 +23,7 @@ with DAG(
     start_date=datetime(2026, 3, 15),
     schedule='@hourly',
     catchup=False,
+    max_active_runs=1,
     default_args={
         'retries': 0,
         'retry_delay': timedelta(minutes=5)},
