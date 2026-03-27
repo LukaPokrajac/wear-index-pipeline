@@ -75,6 +75,8 @@ x-airflow-common:
     # WARNING: Use _PIP_ADDITIONAL_REQUIREMENTS option ONLY for a quick checks
     # for other purpose (development, test and especially production usage) build/extend Airflow image.
     _PIP_ADDITIONAL_REQUIREMENTS: ${_PIP_ADDITIONAL_REQUIREMENTS:-}
+    # Weather ETL target DB (local Compose: etl `db` service on shared network). Override via repo-root .env.
+    WEATHER_DB_URL: ${WEATHER_DB_URL:-postgresql+psycopg2://etl:etl@db:5432/weather}
     # The following line can be used to set a custom config file, stored in the local config folder
     AIRFLOW_CONFIG: '/opt/airflow/config/airflow.cfg'
   volumes:

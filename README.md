@@ -9,12 +9,13 @@ Raw hourly temperature alone doesn't capture how cold it actually feels.
 This pipeline smooths temperature with window functions and combines it with wind speed to compute a feels-like index so you know what to wear.
 
 # Architecture
-- Open-Meteo API
-- Python ETL
-- Staging table
-- UPSERT into weather_hourly
-- Materialized view wear_now
-- Airflow DAG
+
+## Pipeline Flow
+Open-Meteo API → Python ETL → Staging table → UPSERT into weather_hourly → Materialized view wear_now → Airflow DAG (hourly)
+
+## Infrastructure
+- AWS EC2 — runs Docker Compose, Airflow, and ETL
+- AWS RDS — PostgreSQL database
 
 # Tech Stack
 - Python (requests, pandas, SQLAlchemy, logging)
@@ -22,6 +23,7 @@ This pipeline smooths temperature with window functions and combines it with win
 - Apache Airflow (BashOperator, hourly schedule)
 - Docker + Docker Compose
 - Materialized Views + Window Functions
+- AWS (EC2 + RDS)
 
 # Run Locally
 
@@ -45,12 +47,80 @@ Start everything with a single command:
 make up
 ```
 
+### Public repo safety
+
+- Secrets are **not** stored in code; database URL comes from environment variable `WEATHER_DB_URL`.
+- Keep credentials in a local repo-root `.env` file (gitignored), never in tracked files.
+- If a real password was ever exposed, rotate it before publishing.
+
+### Optional: use AWS RDS locally
+
+Create a repo-root `.env` file:
+```bash
+WEATHER_DB_URL=postgresql+psycopg2://USER:PASSWORD@your-instance.region.rds.amazonaws.com:5432/weather
+```
+
+Then start as usual:
+```bash
+make up
+```
+
 This will:
 1. Create the shared Docker network if it doesn't exist
 2. Start the ETL stack (Python ETL + PostgreSQL)
 3. Start the Airflow stack
 4. Create the database tables
 5. Create the `wear_now` materialized view
+
+### Deploy to AWS (EC2 + RDS)
+
+This project can run the Airflow + ETL containers on an EC2 instance, while storing the weather tables on AWS RDS.
+
+#### AWS prerequisites
+
+1. An RDS PostgreSQL instance (port `5432`), with a database named `weather`.
+2. An RDS user/password that matches your `WEATHER_DB_URL` (default examples use user `etl`).
+3. Network/security configuration:
+   - Allow EC2 to connect to RDS on `5432` (RDS inbound from the EC2 security group).
+
+#### Configure the repo on EC2
+
+On the EC2 host, create a repo-root `.env` file (it is gitignored):
+
+```bash
+WEATHER_DB_URL=postgresql+psycopg2://USER:PASSWORD@your-rds-endpoint:5432/weather
+```
+
+Then bring everything up:
+
+```bash
+make up
+```
+
+#### Initialize the RDS schema (one-time)
+
+Because `make up` creates tables/materialized views in the local Postgres container, you must create them in RDS too (so the DAG can load + refresh there).
+
+Create the tables:
+
+```bash
+WEATHER_PSQL_URL=$(echo "$WEATHER_DB_URL" | sed 's#^postgresql+psycopg2://#postgresql://#')
+docker run --rm -i \
+  --network networkName \
+  postgres:16 \
+  psql "$WEATHER_PSQL_URL" -f etl/sql/schema.sql
+```
+
+Create the `wear_now` materialized view:
+
+```bash
+docker run --rm -i \
+  --network networkName \
+  postgres:16 \
+  psql "$WEATHER_PSQL_URL" -f etl/sql/wear_now.sql
+```
+
+After that, open the Airflow UI and trigger the `weather_etl` DAG once.
 
 ## Airflow UI
 
@@ -92,7 +162,6 @@ make down
 
 # Future Improvements
 
-- Deploy to AWS (EC2 + RDS)
 - Add unit tests
 - Add FastAPI endpoint for wear index
 - Implement Airflow Connections for credential management
