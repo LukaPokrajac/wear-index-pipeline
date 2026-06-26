@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What to Wear · Belgrade</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --muted: #94a3b8;
+      --text: #f1f5f9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(1200px 600px at 50% -10%, #1e3a5f, var(--bg));
+      color: var(--text);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 48px 16px;
+    }
+    .wrap { width: 100%; max-width: 720px; }
+    header { text-align: center; margin-bottom: 28px; }
+    header h1 { margin: 0; font-size: 1.4rem; font-weight: 600; }
+    header p { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
+
+    .hero {
+      background: var(--card);
+      border-radius: 20px;
+      padding: 32px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    }
+    .hero .label {
+      display: inline-block;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .hero .temp { font-size: 4.5rem; font-weight: 700; margin: 10px 0 0; line-height: 1; }
+    .hero .when { color: var(--muted); font-size: 0.85rem; margin-top: 8px; }
+
+    h2 { font-size: 0.85rem; color: var(--muted); text-transform: uppercase;
+         letter-spacing: 0.08em; margin: 32px 0 12px; }
+
+    .forecast {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+      gap: 10px;
+    }
+    .hour {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 14px 8px;
+      text-align: center;
+    }
+    .hour .h-time { color: var(--muted); font-size: 0.78rem; }
+    .hour .h-temp { font-size: 1.35rem; font-weight: 600; margin: 6px 0; }
+    .hour .dot { width: 10px; height: 10px; border-radius: 50%; margin: 0 auto; }
+
+    /* label colors */
+    .Freezing { background: #60a5fa; color: #0b1f3a; }
+    .Cold     { background: #38bdf8; color: #062130; }
+    .Chilly   { background: #34d399; color: #052e22; }
+    .Mild     { background: #fbbf24; color: #2a1d00; }
+    .Hot      { background: #fb7185; color: #2c0510; }
+
+    .dot.Freezing { background: #60a5fa; }
+    .dot.Cold     { background: #38bdf8; }
+    .dot.Chilly   { background: #34d399; }
+    .dot.Mild     { background: #fbbf24; }
+    .dot.Hot      { background: #fb7185; }
+
+    .msg { text-align: center; color: var(--muted); padding: 40px; }
+    footer { text-align: center; color: var(--muted); font-size: 0.75rem; margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>What to Wear</h1>
+      <p id="city">Belgrade · feels-like index</p>
+    </header>
+
+    <div id="content"><div class="msg">Loading…</div></div>
+
+    <footer>Refreshes every 5 min · data from the wear_now pipeline</footer>
+  </div>
+
+  <script>
+    function fmtHour(iso) {
+      const d = new Date(iso);
+      return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    }
+    function fmtFull(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString([], { weekday: "short", hour: "2-digit", minute: "2-digit" });
+    }
+
+    async function load() {
+      const content = document.getElementById("content");
+      try {
+        const res = await fetch("/api/wear");
+        const data = await res.json();
+        if (!res.ok) {
+          content.innerHTML = `<div class="msg">${data.error || "No data available yet."}</div>`;
+          return;
+        }
+        document.getElementById("city").textContent = `${data.city} · feels-like index`;
+
+        const c = data.current;
+        let html = `
+          <div class="hero">
+            <span class="label ${c.label}">${c.label}</span>
+            <div class="temp">${c.feels_like_c.toFixed(1)}°</div>
+            <div class="when">Now · ${fmtFull(c.anchor_ts)}</div>
+          </div>`;
+
+        if (data.forecast && data.forecast.length) {
+          html += `<h2>Next hours</h2><div class="forecast">`;
+          for (const f of data.forecast) {
+            html += `
+              <div class="hour">
+                <div class="h-time">${fmtHour(f.anchor_ts)}</div>
+                <div class="h-temp">${f.feels_like_c.toFixed(0)}°</div>
+                <div class="dot ${f.label}" title="${f.label}"></div>
+              </div>`;
+          }
+          html += `</div>`;
+        }
+        content.innerHTML = html;
+      } catch (e) {
+        content.innerHTML = `<div class="msg">Could not reach the API. Is the service running?</div>`;
+      }
+    }
+
+    load();
+    setInterval(load, 5 * 60 * 1000);
+  </script>
+</body>
+</html>

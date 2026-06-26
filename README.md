@@ -122,6 +122,36 @@ docker run --rm -i \
 
 After that, open the Airflow UI and trigger the `weather_etl` DAG once.
 
+## Web UI
+
+Open [http://localhost:8000](http://localhost:8000) — a browser dashboard showing the current
+feels-like temperature for Belgrade plus the next 12 hours, color-coded by wear label.
+
+It's a small FastAPI service (`etl/api/`) that reads the `wear_now` materialized view and is
+started automatically by `make up`. JSON is also available at
+[http://localhost:8000/api/wear](http://localhost:8000/api/wear).
+
+> The dashboard is empty until the DAG has run at least once (it reads the same data as `make query`).
+
+### Public access (Cloudflare Tunnel)
+
+The dashboard can be exposed on the internet under a custom domain via a [Cloudflare named tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/),
+without opening any router ports — the machine dials out to Cloudflare, which relays public
+requests back to the local UI on port `8000`. Only the UI is exposed; Postgres and Airflow stay private.
+
+One-time setup (requires a domain on a free Cloudflare account):
+
+```bash
+cloudflared tunnel login                                   # authorize your domain
+cloudflared tunnel create wear                             # create the tunnel + credentials
+cloudflared tunnel route dns wear wear.<your-domain>       # DNS record -> tunnel
+# config at ~/.cloudflared/config.yml maps the hostname to http://localhost:8000
+sudo cloudflared service install                           # run as a boot service (survives reboot)
+```
+
+> The tunnel credentials (`~/.cloudflared/*.json`, `cert.pem`) are **secrets** — never commit them.
+> For the public URL to keep serving after a reboot, the `db`/`api` containers use `restart: unless-stopped`.
+
 ## Airflow UI
 
 Open [http://localhost:8080](http://localhost:8080) — trigger the DAG manually or wait for the hourly schedule.  
@@ -163,5 +193,4 @@ make down
 # Future Improvements
 
 - Add unit tests
-- Add FastAPI endpoint for wear index
 - Implement Airflow Connections for credential management

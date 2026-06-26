@@ -6,12 +6,26 @@ services:
       POSTGRES_PASSWORD: etl
       POSTGRES_DB: weather
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - etl-db-volume:/var/lib/postgresql/data
     networks:
       - networkName
     container_name: etl-db-1
+    restart: unless-stopped
+
+  api:
+    build: ./api
+    environment:
+      DB_URL: postgresql+psycopg2://etl:etl@db:5432/weather
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    networks:
+      - networkName
+    container_name: etl-api-1
+    restart: unless-stopped
 networks:
   networkName:
     name: networkName
